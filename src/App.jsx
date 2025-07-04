@@ -407,7 +407,6 @@ class App {
         const url = `https://www.google.com/maps/dir/${this.userLocation.lat},${this.userLocation.lng}/${service.latitude},${service.longitude}`;
         window.open(url, '_blank');
     }
-    
 }
 
 export default App;

@@ -83,54 +83,89 @@ export class DataService {
         }
     }
 
-    async searchByText(query, userLocation) {
-        try {
-            if (!this.useRealData || !userLocation) {
-                // Search in mock data
-                return this.mockServices.filter(service =>
-                    service.name.toLowerCase().includes(query.toLowerCase()) ||
-                    service.category.toLowerCase().includes(query.toLowerCase()) ||
-                    service.address.toLowerCase().includes(query.toLowerCase())
-                );
-            }
+    // async searchByText(query, userLocation) {
+    //     try {
+    //         if (!this.useRealData || !userLocation) {
+    //             // Search in mock data
+    //             return this.mockServices.filter(service =>
+    //                 service.name.toLowerCase().includes(query.toLowerCase()) ||
+    //                 service.category.toLowerCase().includes(query.toLowerCase()) ||
+    //                 service.address.toLowerCase().includes(query.toLowerCase())
+    //             );
+    //         }
 
-            const cacheKey = `search_${query}_${userLocation.lat},${userLocation.lng}`;
-            const cached = this.cache.get(cacheKey);
+    //         const cacheKey = `search_${query}_${userLocation.lat},${userLocation.lng}`;
+    //         const cached = this.cache.get(cacheKey);
             
-            if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-                console.log(`Using cached search results for "${query}"`);
-                return cached.data;
-            }
+    //         if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+    //             console.log(`Using cached search results for "${query}"`);
+    //             return cached.data;
+    //         }
 
-            console.log(`Searching for "${query}" using Google Maps API...`);
-            this.trackRequest();
+    //         console.log(`Searching for "${query}" using Google Maps API...`);
+    //         this.trackRequest();
             
-            // Use Google Maps text search
-            const services = await this.googleMaps.textSearch(
-                query, 
-                userLocation, 
-                CONFIG.DEFAULT_SEARCH_RADIUS
-            );
+    //         // Use Google Maps text search
+    //         const services = await this.googleMaps.textSearch(
+    //             query, 
+    //             userLocation, 
+    //             CONFIG.DEFAULT_SEARCH_RADIUS
+    //         );
             
-            // Cache the results
-            this.cache.set(cacheKey, {
-                data: services,
-                timestamp: Date.now()
-            });
+    //         // Cache the results
+    //         this.cache.set(cacheKey, {
+    //             data: services,
+    //             timestamp: Date.now()
+    //         });
             
-            console.log(`Found ${services.length} results for "${query}"`);
-            return services;
-        } catch (error) {
-            console.error(`Failed to search for "${query}":`, error);
+    //         console.log(`Found ${services.length} results for "${query}"`);
+    //         return services;
+    //     } catch (error) {
+    //         console.error(`Failed to search for "${query}":`, error);
             
-            // Fallback to mock data search
+    //         // Fallback to mock data search
+    //         return this.mockServices.filter(service =>
+    //             service.name.toLowerCase().includes(query.toLowerCase()) ||
+    //             service.category.toLowerCase().includes(query.toLowerCase()) ||
+    //             service.address.toLowerCase().includes(query.toLowerCase())
+    //         );
+    //     }
+    // }
+
+    
+async searchByText(query, userLocation) {
+    try {
+        if (!this.useRealData || !userLocation) {
+            // Search in mock data
             return this.mockServices.filter(service =>
                 service.name.toLowerCase().includes(query.toLowerCase()) ||
                 service.category.toLowerCase().includes(query.toLowerCase()) ||
                 service.address.toLowerCase().includes(query.toLowerCase())
             );
         }
+
+        console.log(`Searching for "${query}"...`);
+        
+        // Use Google Places text search
+        const services = await this.googlePlaces.searchNearbyPlaces(
+            userLocation, 
+            query, 
+            CONFIG.DEFAULT_SEARCH_RADIUS
+        );
+        
+        console.log(`Found ${services.length} results for "${query}"`);
+        return services;
+    } catch (error) {
+        console.error(`Failed to search for "${query}":`, error);
+        
+        // Fallback to mock data search
+        return this.mockServices.filter(service =>
+            service.name.toLowerCase().includes(query.toLowerCase()) ||
+            service.category.toLowerCase().includes(query.toLowerCase()) ||
+            service.address.toLowerCase().includes(query.toLowerCase())
+        );
     }
+}
 
     async getRealServices(userLocation) {
         const categories = ['pharmacy', 'grocery', 'restaurant', 'mall', 'market', 'hospital', 'gas'];
